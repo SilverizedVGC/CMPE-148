@@ -4,20 +4,21 @@ import sys # In order to terminate the program
 
 serverSocket = socket(AF_INET, SOCK_STREAM)
 #Prepare a sever socket
-#Fill in start
-#Fill in end
+serverSocket.bind(('', 8888))
+serverSocket.listen(1)
 while True:
     #Establish the connection
     print('Ready to serve...')
-    connectionSocket, addr = 
+    connectionSocket, addr = serverSocket.accept()
     #Fill in start
     #Fill in end
     try:
-        message = #Fill in start #Fill in end
+        message = connectionSocket.recv(1024).decode()
         filename = message.split()[1]
         f = open(filename[1:])
-        outputdata = #Fill in start #Fill in end
+        outputdata = f.read()
         #Send one HTTP header line into socket
+        serverSocket.send("200 OK\r\n".encode())
         #Fill in start
         #Fill in end
         #Send the content of the requested file to the client
@@ -28,9 +29,11 @@ while True:
         connectionSocket.close()
     except IOError:
         #Send response message for file not found
+        serverSocket.send("404 Not Found\r\n".encode())
         #Fill in start
         #Fill in end
         #Close client socket
+        connectionSocket.close()
         #Fill in start
         #Fill in end
 serverSocket.close()
