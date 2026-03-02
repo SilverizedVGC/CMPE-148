@@ -17,7 +17,8 @@ while True:
 
         if filename == '/':
             filename = '/index.html'
-
+        # Note that in order for this to work, a file should be in the root directory, not in this folder. 
+        
         f = open(filename[1:])
         outputdata = f.read()
         #Send one HTTP header line into socket
