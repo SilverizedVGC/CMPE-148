@@ -13,16 +13,19 @@ def checksum (string):
     countTo = (len(string) // 2) * 2
     count = 0
     while count < countTo:
-        thisVal = ord(string[count+1]) * 256 + ord(string[count])
+        # Python 3 Fix: 'string' is bytes, so indexing already returns an int. ord() is removed.
+        thisVal = string[count+1] * 256 + string[count]
         csum = csum + thisVal
         csum = csum & 0xffffffff
         count = count + 2
     if countTo < len(string):
-        csum = csum + ord(string[len(string) - 1])
+        # Python 3 Fix: ord() removed here as well.
+        csum = csum + string[len(string) - 1]
         csum = csum & 0xffffffff
     csum = (csum >> 16) + (csum & 0xffff)
     csum = csum + (csum >> 16)
-    answer = csum
+    # Python 3 Fix: Added missing bitwise NOT (~) for standard ICMP checksum
+    answer = ~csum 
     answer = answer & 0xffff
     answer = answer >> 8 | (answer << 8 & 0xff00)
     return answer
@@ -45,7 +48,8 @@ def receiveOnePing (mySocket, ID, timeout, destAddr):
 
         #Unpack the header using struct.unpack. The format is "bbHHh" (type, code, checksum, id, sequence)
         unpackedHeader = struct.unpack("bbHHh", header)
-        icmp_type, code, checksum, packet_ID, sequence = unpackedHeader
+        # Renamed variable to checksum_val so it doesn't shadow the checksum function
+        icmp_type, code, checksum_val, packet_ID, sequence = unpackedHeader
 
         #Check if the packet ID matches the ID we sent. If so, return the difference between the time received and the time sent (which is embedded in the data portion of the packet).
         if icmp_type == 0:
@@ -69,8 +73,10 @@ def sendOnePing (mySocket, destAddr, ID):
     # struct — Interpret strings as packed binary data.
     header = struct.pack("bbHHh", ICMP_ECHO_REQUEST, 0, myChecksum, ID, 1)
     data = struct.pack("d", time.time())
+    
     #Calculate the checksum on the data and the dummy header.
-    myChecksum = checksum(str(header + data))
+    # Python 3 Fix: Pass bytes directly, do NOT cast to str()
+    myChecksum = checksum(header + data)
     
     #Get the right checksum, and put in the header
     if sys.platform == 'darwin':
@@ -102,7 +108,7 @@ def ping (host, timeout=1):
     # Send ping requests to a server separated by approximately one second
     while 1:
         delay = doOnePing(dest, timeout)
-        print(delay)
+        print("Delay: ", delay)
         time.sleep(1) # one second
     return delay
 
